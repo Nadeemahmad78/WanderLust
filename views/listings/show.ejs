@@ -1,0 +1,173 @@
+<% layout("layouts/boilerplate") %>
+
+<% if (!listing) { %>
+  <div class="alert alert-danger mt-3 text-center">
+    Listing not found.
+  </div>
+<% } else { %>
+
+<%
+  const isOwner =
+    currentUser &&
+    listing.owner &&
+    listing.owner._id &&
+    listing.owner._id.toString() === currentUser._id.toString();
+%>
+
+<div class="row mt-3">
+
+  <!-- TITLE -->
+  <div class="col-6 offset-3 text-center">
+    <h2><%= listing.title %></h2>
+  </div>
+
+  <!-- LISTING CARD -->
+  <div class="card col-6 offset-3 mt-3">
+    <img
+      src="<%= listing.image && listing.image.url ? listing.image.url : '/images/default.jpg' %>"
+      class="card-img-top img-fluid"
+      alt="listing image"
+      style="max-height: 400px; object-fit: cover;"
+    />
+
+    <div class="card-body">
+      <p class="card-text">
+        <i>Owner: <%= listing.owner?.username || "Unknown" %></i>
+      </p>
+
+      <p class="card-text"><%= listing.description %></p>
+      <p class="card-text">₹ <%= listing.price %></p>
+      <p class="card-text"><%= listing.location %></p>
+      <p class="card-text"><%= listing.country %></p>
+    </div>
+  </div>
+
+  <!-- MAP -->
+  <div class="col-6 offset-3 mt-4">
+    <h5 class="mb-2">Location on Map</h5>
+    <div id="map" style="height: 300px; border-radius: 10px;"></div>
+  </div>
+
+  <!-- OWNER CONTROLS -->
+  <% if (isOwner) { %>
+    <div class="text-center mt-3">
+      <a href="/listings/<%= listing._id %>/edit" class="btn btn-dark me-2">
+        Edit
+      </a>
+
+      <form
+        method="POST"
+        action="/listings/<%= listing._id %>?_method=DELETE"
+        class="d-inline"
+      >
+        <button class="btn btn-dark">Delete</button>
+      </form>
+    </div>
+  <% } %>
+
+  <!-- REVIEWS -->
+  <div class="col-8 offset-2 mt-4 mb-3">
+    <hr />
+
+    <% if (currentUser) { %>
+      <h4>Leave a Review</h4>
+
+      <form
+        action="/listings/<%= listing._id %>/reviews"
+        method="POST"
+        class="needs-validation"
+        novalidate
+      >
+        <fieldset class="starability-slot">
+          <legend>Rating</legend>
+
+          <input type="radio" id="rate-1" name="review[rating]" value="1" checked />
+          <label for="rate-1">1 star</label>
+
+          <input type="radio" id="rate-2" name="review[rating]" value="2" />
+          <label for="rate-2">2 stars</label>
+
+          <input type="radio" id="rate-3" name="review[rating]" value="3" />
+          <label for="rate-3">3 stars</label>
+
+          <input type="radio" id="rate-4" name="review[rating]" value="4" />
+          <label for="rate-4">4 stars</label>
+
+          <input type="radio" id="rate-5" name="review[rating]" value="5" />
+          <label for="rate-5">5 stars</label>
+        </fieldset>
+
+        <div class="mb-3 mt-3">
+          <label class="form-label">Comment</label>
+          <textarea
+            name="review[comment]"
+            class="form-control"
+            rows="4"
+            required
+          ></textarea>
+        </div>
+
+        <button class="btn btn-outline-dark">Submit</button>
+      </form>
+
+      <hr />
+    <% } %>
+
+    <h5>All Reviews</h5>
+
+    <div class="row">
+      <% if (listing.reviews && listing.reviews.length > 0) { %>
+        <% listing.reviews.forEach(review => { %>
+          <div class="card col-5 ms-3 mb-3">
+            <div class="card-body">
+              <h6>@<%= review.author?.username || "Anonymous" %></h6>
+
+              <p
+                class="starability-result"
+                data-rating="<%= review.rating %>"
+              ></p>
+
+              <p><%= review.comment %></p>
+
+              <% if (currentUser && review.author && review.author._id.toString() === currentUser._id.toString()) { %>
+                <form
+                  method="POST"
+                  action="/listings/<%= listing._id %>/reviews/<%= review._id %>?_method=DELETE"
+                >
+                  <button class="btn btn-sm btn-dark">Delete</button>
+                </form>
+              <% } %>
+            </div>
+          </div>
+        <% }) %>
+      <% } else { %>
+        <p class="text-muted ms-3">No reviews yet.</p>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<!-- LEAFLET MAP -->
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+  const lat = 28.6139;
+  const lng = 77.1025;
+
+  const map = L.map("map").setView([lat, lng], 5);
+
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: "© OpenStreetMap contributors"
+  }).addTo(map);
+
+  L.marker([lat, lng])
+    .addTo(map)
+    .bindPopup("<b><%= listing.location %>, <%= listing.country %></b>")
+    .openPopup();
+</script>
+
+<% } %>

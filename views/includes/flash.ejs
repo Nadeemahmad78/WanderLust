@@ -1,0 +1,11 @@
+<% if (typeof success !== 'undefined' && success && success.length) { %>
+  <div class="alert alert-success text-center mt-3">
+    <%= success[0] %>
+  </div>
+<% } %>
+
+<% if (typeof error !== 'undefined' && error && error.length) { %>
+  <div class="alert alert-danger text-center mt-3">
+    <%= error[0] %>
+  </div>
+<% } %>
