@@ -35,7 +35,7 @@ Installation
 
 1. Clone the repository:
 
-git clone https://github.com/your-username/airbnb-clone.git
+https://wanderlust123-plum.vercel.app/
 
 2. Navigate to the project directory:
 
